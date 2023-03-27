@@ -37,6 +37,10 @@ st.write("")
 st.write("")
 
 df=pd.read_csv(path + "DFBASE_V1b.csv", sep =';')
+df['tourney_date'] = pd.to_datetime(df['tourney_date'])
+df['tourney_date'] = df['tourney_date'].dt.strftime('%d-%m-%Y')
+# df['tourney_date'] = df['tourney_date'].apply(lambda x: x.strftime('%d-%m-%Y')) # Convertir en format de date française
+
 
 def ace_analyze(nom_player): # La liste contient dans l'ordre: nombre moyen global d'ace, moyenne par Clay, Grass, Hard
     surfaces = ['Clay', 'Grass', 'Hard']
@@ -210,7 +214,16 @@ if not ((player1 == "Sélectionnez un joueur") or (player2 == "Sélectionnez un 
     if (historique[-1] == 0) and (historique[-2] == 0) :
         st.markdown("<h2 style='text-align: center; color:red'>Pas de passif entre ces 2 joueurs !</h2>", unsafe_allow_html=True)
     else :
-        st.write(historique[-1] + historique[-2])
+        nb_duels = historique[-1] + historique[-2]
+        duels1= (df[(df['player_1_name'] == player1) & (df['player_2_name'] == player2)])  
+        duels2= (df[(df['player_1_name'] == player2) & (df['player_2_name'] == player1)])
+        duels = pd.concat([duels1,duels2])
+        duels['tourney_date'] = pd.to_datetime(duels['tourney_date'])
+        duels['tourney_date'] = duels['tourney_date'].dt.year
+        premier_duel = duels['tourney_date'].min()
+        dernier_duel = duels['tourney_date'].max()
+        st.markdown("<h1 style='text-align: center;'> HISTORIQUE TAUX VICTOIRE VS</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='text-align: center; color : #ac211e'>Les joueurs se sont affrontés {nb_duels} fois entre {premier_duel} et {dernier_duel}.</h3>", unsafe_allow_html=True)
         fig = go.Figure(
         go.Pie(
         labels=list(data.keys()),
@@ -218,12 +231,13 @@ if not ((player1 == "Sélectionnez un joueur") or (player2 == "Sélectionnez un 
         hole=0.5,
         marker={"colors": ["#008fd5", "#fc4f30"]}, ))
         fig.update_layout(
-        font=dict(size=15),margin=dict(t=20, b=0),width=400, height=300, legend=dict(
+        font=dict(size=18),margin=dict(t=20, b=0),width=400, height=300, legend=dict(
         orientation="h",
         y=-0.1,
         x=0.5,
         xanchor="center",
-        yanchor="top"
+        yanchor="top",
+        font=dict(size=20)
         ))
         st.plotly_chart(fig, use_container_width=True)
     
